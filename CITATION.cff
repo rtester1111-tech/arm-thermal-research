@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this artifact, please cite the repository and the relevant submitted manuscript once publication metadata is available."
+authors:
+  - family-names: "Lee"
+    given-names: "Chengdao"
+title: "ARM Thermal Research: gem5 Thermal Verification and Trace-Driven Thermal Scheduling Artifacts"
+version: "submission-artifact-2026-06-01"
+date-released: "2026-06-01"
+repository-code: "https://github.com/rtester1111-tech/arm-thermal-research"
+abstract: "Artifact repository for two submitted IEEE Embedded Systems Letters manuscripts: cross-solver validation of a gem5 native Cauer RC thermal initialization artifact, and gem5 thermal-node instrumentation for trace-driven package-aware scheduling. The repository contains validation scripts, figures, patches, results summaries, and submission snapshots. Manuscripts submitted on 2026-06-01 are under review."
+keywords:
+  - "gem5"
+  - "Cauer RC Thermal Model"
+  - "Thermal Simulation"
+  - "Dynamic Thermal Management"
+  - "Energy-Aware Scheduling"
+  - "DVFS"
+  - "ARM big.LITTLE"

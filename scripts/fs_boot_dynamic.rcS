@@ -1,0 +1,42 @@
+#!/bin/bash
+# ============================================================
+# fs_boot_dynamic.rcS — Elegant Checkpoint & Dynamic Workload
+# ============================================================
+# This script handles the standard gem5 hack_back_ckpt logic with
+# a robust self-comparison safeguard to prevent infinite loops:
+#   1. Saves a checkpoint.
+#   2. Reads the dynamic workload from the host.
+#   3. Safely compares the workload with the bootscript itself.
+#   4. If they differ, execute the workload. Otherwise, exit.
+# ============================================================
+
+echo "=========================================="
+echo "Atomic Boot: System initialized."
+echo "Saving clean dynamic checkpoint..."
+echo "=========================================="
+
+# Save checkpoint.
+# During boot, this creates the checkpoint and the simulation continues.
+# During restore, execution resumes exactly right after this line.
+/sbin/m5 checkpoint
+
+echo "=========================================="
+echo "Resuming from checkpoint"
+echo "Attempting to read dynamic workload script..."
+echo "=========================================="
+
+/sbin/m5 readfile > /tmp/dynamic_workload.sh
+
+# Safeguard: Compare the fetched workload with the boot script itself.
+# If they are identical, it means we are in the Boot Phase (m5 readfile
+# just returned the bootscript). If they differ, we are in the Restore Phase.
+if [ -s /tmp/dynamic_workload.sh ] && ! cmp -s /tmp/dynamic_workload.sh /tmp/script; then
+    echo "New dynamic workload found. Executing..."
+    chmod +x /tmp/dynamic_workload.sh
+    /tmp/dynamic_workload.sh
+else
+    echo "Dynamic workload matches bootscript or is empty (Boot Phase). Skipping execution."
+fi
+
+echo "Exiting simulation."
+/sbin/m5 exit

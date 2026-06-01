@@ -1,0 +1,219 @@
+#!/bin/bash
+# ============================================================
+# fs_eas_phase6.rcS — Phase 6 EAS Task Migration Verification
+# ============================================================
+# Purpose: Verify that Linux EAS migrates heavy tasks from
+#   an overheated big core to the little core.
+#
+# Sequence (all after checkpoint restore in Timing mode):
+#   1. Print kernel / EAS status
+#   2. Pin a heavy compute task to big core → observe thermal rise
+#   3. Remove CPU pin → let EAS decide placement
+#   4. Compare: avg_freq on big / little during each phase
+#   5. Log everything, exit cleanly
+# ============================================================
+
+# LOG="/tmp/eas_phase6.log"
+# Let output go directly to stdout/stderr so gem5 captures it in system.terminal
+
+echo "======================================================="
+echo "Phase 6: EAS Task Migration Verification"
+echo "Date: $(date)"
+echo "======================================================="
+
+# ── Helper: read sysfs safely ────────────────────────────────
+sysfs_read() { cat "$1" 2>/dev/null || echo "N/A"; }
+
+# ─────────────────────────────────────────────────────────────
+# Section 1: System Status
+# ─────────────────────────────────────────────────────────────
+echo ""
+echo "[INFO] Kernel: $(uname -r)"
+echo "[INFO] CPUs online: $(sysfs_read /sys/devices/system/cpu/online)"
+echo "[INFO] CPUs possible: $(sysfs_read /sys/devices/system/cpu/possible)"
+
+# Show current governor per CPU
+for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+    cpu_id=$(echo "$cpu" | grep -oP 'cpu\d+')
+    gov=$(sysfs_read "$cpu")
+    echo "[INFO] $cpu_id governor: $gov"
+done
+
+# Check EAS flag
+eas_flag="/sys/kernel/debug/sched/energy_aware"
+if [ -f "$eas_flag" ]; then
+    echo "[INFO] EAS active: $(sysfs_read $eas_flag)"
+else
+    echo "[INFO] EAS sysfs flag not found (may still be active via Kconfig)"
+fi
+
+# Check energy model presence
+em_dir="/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences"
+if [ -f "$em_dir" ]; then
+    echo "[INFO] Energy perf preferences: $(sysfs_read $em_dir)"
+else
+    echo "[INFO] Energy model OPP check: $(ls /sys/bus/cpu/devices/cpu0/cpufreq/ 2>/dev/null)"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Section 2: Phase A — Pinned big-core thermal stress
+# ─────────────────────────────────────────────────────────────
+echo "======================================================="
+echo "[PHASE A] Pinned big-core stress (cpu0 only)"
+echo "          Target: raise big-core temperature"
+echo "======================================================="
+
+# Save OPP snapshot before stress
+big_freq_before=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+little_freq_before=$(sysfs_read /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq)
+echo "[A] cpu0 freq before: ${big_freq_before} kHz"
+echo "[A] cpu1 freq before: ${little_freq_before} kHz"
+
+# Run Python3 compute stress pinned to cpu0 (big core)
+# taskset 0x1 = cpu0 only
+echo "[A] Launching 50K-iter LCG pinned to cpu0..."
+START_A=$(awk '{print $1}' /proc/uptime)
+taskset 0x1 python3 - <<'PYEOF' &
+x = 0xDEADBEEF_CAFEBABE
+for i in range(50000):
+    x = (x * 6364136223846793005 + 1442695040888963407) & 0xFFFFFFFFFFFFFFFF
+print(f"[PHASE A] Done. x=0x{x:016x}")
+PYEOF
+PID_A=$!
+
+for i in $(seq 1 20); do
+    if [ -d /proc/$PID_A ]; then
+        stat=$(cat /proc/$PID_A/stat 2>/dev/null || echo "N/A")
+        if [ "$stat" != "N/A" ]; then
+            cpu_id=$(echo "$stat" | awk '{print $39}')
+            timestamp=$(awk '{print $1}' /proc/uptime)
+            echo "[SAMPLER] TS: $timestamp | Phase: A | PID: $PID_A | Task: python3 | CPU: $cpu_id | Pinned: yes"
+        fi
+    fi
+done
+wait $PID_A
+END_A=$(awk '{print $1}' /proc/uptime)
+ELAPSED_A=$(awk -v s="$START_A" -v e="$END_A" 'BEGIN { printf "%d", (e-s)*1000 }')
+
+big_freq_after_a=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+little_freq_after_a=$(sysfs_read /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq)
+echo "[A] Wall time: ${ELAPSED_A} ms"
+echo "[A] cpu0 freq after stress: ${big_freq_after_a} kHz"
+echo "[A] cpu1 freq after stress: ${little_freq_after_a} kHz"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Section 3: Phase B — Free placement (EAS decision)
+# ─────────────────────────────────────────────────────────────
+echo "======================================================="
+echo "[PHASE B] Free EAS placement (no CPU affinity)"
+echo "          Hypothesis: EAS may prefer little core for"
+echo "          efficiency if big core is thermally stressed"
+echo "======================================================="
+
+# Run same workload without CPU affinity — let scheduler decide
+echo "[B] Launching 50K-iter LCG (free placement)..."
+START_B=$(awk '{print $1}' /proc/uptime)
+python3 - <<'PYEOF' &
+import os, subprocess
+cpu_id = int(subprocess.check_output(['sh', '-c',
+    'grep Cpus_allowed_list /proc/self/status | awk \'{print $2}\''
+]).decode().split('-')[0])
+x = 0xDEADBEEF_CAFEBABE
+for i in range(50000):
+    x = (x * 6364136223846793005 + 1442695040888963407) & 0xFFFFFFFFFFFFFFFF
+print(f"[PHASE B] Done. x=0x{x:016x}  (scheduled on cpu{cpu_id})")
+PYEOF
+PID_B=$!
+
+for i in $(seq 1 20); do
+    if [ -d /proc/$PID_B ]; then
+        stat=$(cat /proc/$PID_B/stat 2>/dev/null || echo "N/A")
+        if [ "$stat" != "N/A" ]; then
+            cpu_id=$(echo "$stat" | awk '{print $39}')
+            timestamp=$(awk '{print $1}' /proc/uptime)
+            echo "[SAMPLER] TS: $timestamp | Phase: B | PID: $PID_B | Task: python3 | CPU: $cpu_id | Pinned: no"
+        fi
+    fi
+done
+wait $PID_B
+END_B=$(awk '{print $1}' /proc/uptime)
+ELAPSED_B=$(awk -v s="$START_B" -v e="$END_B" 'BEGIN { printf "%d", (e-s)*1000 }')
+
+big_freq_after_b=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+little_freq_after_b=$(sysfs_read /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq)
+echo "[B] Wall time: ${ELAPSED_B} ms"
+echo "[B] cpu0 freq after: ${big_freq_after_b} kHz"
+echo "[B] cpu1 freq after: ${little_freq_after_b} kHz"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Section 4: Phase C — Multi-task concurrent stress
+# ─────────────────────────────────────────────────────────────
+echo "======================================================="
+echo "[PHASE C] Multi-task concurrent stress (2 × 300K iters)"
+echo "          Both CPUs active; measure frequency divergence"
+echo "======================================================="
+
+
+
+python3 - <<'PYEOF' &
+x = 0x1234567890ABCDEF
+for i in range(300000):
+    x = (x * 6364136223846793005 + 1442695040888963407) & 0xFFFFFFFFFFFFFFFF
+print(f"[PHASE C-1] Done. x=0x{x:016x}")
+PYEOF
+PID1=$!
+
+python3 - <<'PYEOF' &
+y = 0xFEDCBA9876543210
+for i in range(300000):
+    y = (y * 2862933555777941757 + 3037000493) & 0xFFFFFFFFFFFFFFFF
+print(f"[PHASE C-2] Done. y=0x{y:016x}")
+PYEOF
+PID2=$!
+
+wait $PID1 $PID2
+
+big_freq_c=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+little_freq_c=$(sysfs_read /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq)
+echo "[C] cpu0 freq: ${big_freq_c} kHz"
+echo "[C] cpu1 freq: ${little_freq_c} kHz"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Section 5: Summary
+# ─────────────────────────────────────────────────────────────
+echo "======================================================="
+echo "SUMMARY: EAS Phase 6 Task Migration Test"
+echo "======================================================="
+echo ""
+echo "  Phase A (pinned big, ${ELAPSED_A} ms):"
+echo "    cpu0: ${big_freq_before} → ${big_freq_after_a} kHz"
+echo "    cpu1: ${little_freq_before} → ${little_freq_after_a} kHz"
+echo ""
+echo "  Phase B (free EAS, ${ELAPSED_B} ms):"
+echo "    cpu0: ${big_freq_after_a} → ${big_freq_after_b} kHz"
+echo "    cpu1: ${little_freq_after_a} → ${little_freq_after_b} kHz"
+echo ""
+echo "  Phase C (concurrent 2-task):"
+echo "    cpu0: ${big_freq_c} kHz  |  cpu1: ${little_freq_c} kHz"
+echo ""
+
+if [ "$ELAPSED_B" -lt "$ELAPSED_A" ] 2>/dev/null; then
+    echo "  RESULT: Free-placement run was FASTER — suggests EAS chose"
+    echo "          a more efficient CPU or higher OPP point."
+elif [ "$ELAPSED_B" -gt "$ELAPSED_A" ] 2>/dev/null; then
+    echo "  RESULT: Free-placement run was SLOWER — EAS may have chosen"
+    echo "          little core for energy efficiency over raw speed."
+else
+    echo "  RESULT: Similar performance — thermal throttling or same core."
+fi
+
+echo ""
+echo "  Log saved to: $LOG"
+echo "======================================================="
+
+/sbin/m5 exit

@@ -1,0 +1,55 @@
+#!/bin/bash
+# ============================================================
+# fs_bootscript.rcS — gem5 FS Boot Script (readfile)
+# ============================================================
+# This script is executed automatically by the guest Linux
+# after boot completes (via m5 readfile mechanism).
+#
+# For Atomic boot (Phase A): prints system info, saves checkpoint, exits.
+# For Timing restore (Phase B): the readfile content is replaced by
+# run_workload_light.rcS via the --bootscript argument.
+# ============================================================
+
+echo "=========================================="
+echo "gem5 FS Boot Script - System Information"
+echo "=========================================="
+
+# Basic system info
+echo "[INFO] Kernel: $(uname -r)"
+echo "[INFO] Architecture: $(uname -m)"
+echo "[INFO] Date: $(date)"
+
+# CPU info
+echo ""
+echo "[CPU] Online CPUs:"
+cat /sys/devices/system/cpu/online 2>/dev/null || echo "  (unavailable)"
+
+echo "[CPU] CPU frequencies:"
+for cpu in /sys/devices/system/cpu/cpu*/cpufreq; do
+    if [ -d "$cpu" ]; then
+        echo "  $(basename $(dirname $cpu)):"
+        echo "    current: $(cat $cpu/scaling_cur_freq 2>/dev/null || echo 'N/A') kHz"
+        echo "    governor: $(cat $cpu/scaling_governor 2>/dev/null || echo 'N/A')"
+    fi
+done
+
+# Thermal zones
+echo ""
+echo "[THERMAL] Thermal zones:"
+for tz in /sys/class/thermal/thermal_zone*; do
+    if [ -d "$tz" ]; then
+        echo "  $(basename $tz): type=$(cat $tz/type 2>/dev/null || echo 'N/A') temp=$(cat $tz/temp 2>/dev/null || echo 'N/A')"
+    fi
+done
+
+echo ""
+echo "=========================================="
+echo "System checks complete."
+echo "Saving checkpoint via m5..."
+echo "=========================================="
+
+# Save checkpoint so we can restore with timing CPU later
+/sbin/m5 checkpoint
+
+echo "Checkpoint saved. Exiting simulation."
+/sbin/m5 exit

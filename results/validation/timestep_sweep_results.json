@@ -1,0 +1,35 @@
+{
+  "sweep": [
+    {
+      "dt": 1e-06,
+      "rmse_K": 4e-08,
+      "peak_error_K": 7e-08,
+      "convergence_order": null
+    },
+    {
+      "dt": 1e-05,
+      "rmse_K": 4.1e-07,
+      "peak_error_K": 7.1e-07,
+      "convergence_order": 1.022
+    },
+    {
+      "dt": 0.0001,
+      "rmse_K": 4.14e-06,
+      "peak_error_K": 7.06e-06,
+      "convergence_order": 1.0
+    },
+    {
+      "dt": 0.001,
+      "rmse_K": 4.144e-05,
+      "peak_error_K": 7.062e-05,
+      "convergence_order": 1.0
+    },
+    {
+      "dt": 0.01,
+      "rmse_K": 0.00041756,
+      "peak_error_K": 0.00070527,
+      "convergence_order": 1.003
+    }
+  ],
+  "bug_rmse_K": 8.3903
+}

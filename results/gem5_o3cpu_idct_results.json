@@ -1,0 +1,20 @@
+{
+  "scalar": {
+    "simSeconds": 0.000614,
+    "numCycles": 1227831.0,
+    "committedInsts": 3553466.0,
+    "ipc": 2.894
+  },
+  "neon": {
+    "simSeconds": 0.411305,
+    "numCycles": 822609136.0,
+    "committedInsts": 986545379.0,
+    "ipc": 1.199
+  },
+  "sve2": {
+    "simSeconds": 0.001393,
+    "numCycles": 2786194.0,
+    "committedInsts": 2582933.0,
+    "ipc": 0.927
+  }
+}

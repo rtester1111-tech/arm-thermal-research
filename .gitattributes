@@ -1,0 +1,22 @@
+* text=auto
+
+*.sh text eol=lf
+*.rcS text eol=lf
+*.py text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.tex text eol=lf
+*.bib text eol=lf
+*.cff text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.dtb binary
+*.device binary
+*.zip binary
+*.7z binary

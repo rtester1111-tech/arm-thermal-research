@@ -1,0 +1,44 @@
+\PassOptionsToPackage{expansion=false}{microtype}
+\documentclass[journal,10pt,letterpaper]{IEEEtran}
+
+\usepackage{amsmath, amsfonts}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\hyphenation{Thermal-Node-Stats Thermal-Node}
+
+\begin{document}
+
+\title{gem5 Thermal-Node Instrumentation for Trace-Driven Package-Aware Scheduling}
+
+\author{\IEEEauthorblockN{Chengdao Lee}\\
+\IEEEauthorblockA{\textit{Independent Researcher}\\
+Email: forkasder@gmail.com}}
+
+\maketitle
+
+\input{sections/01_abstract}
+
+\begin{IEEEkeywords}
+Dynamic Thermal Management, Energy Aware Scheduling, Heterogeneous Multicore, big.LITTLE, Thermal Modeling
+\end{IEEEkeywords}
+
+\input{sections/02_intro}
+\input{sections/03_background}
+\input{sections/04_high_fidelity_thermal_modeling}
+\input{sections/05_thermal_aware_eas}
+\input{sections/06_evaluation}
+\input{sections/07_conclusion}
+
+\section*{Acknowledgment}
+During the preparation of this work, the author used AI assistants to verify evidence consistency and proofread the manuscript. The author reviewed and edited all content and takes full responsibility for this publication.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

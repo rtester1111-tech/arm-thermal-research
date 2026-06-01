@@ -1,0 +1,98 @@
+[
+  {
+    "index": 0,
+    "time_ms": 0.0,
+    "final_tick": 339632143000,
+    "temp_die_C": 25.0,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 0.437877,
+    "st_power_W": 0.000151,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.466886
+  },
+  {
+    "index": 1,
+    "time_ms": 5.0,
+    "final_tick": 344632143000,
+    "temp_die_C": 25.019,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 0.473319,
+    "st_power_W": 0.00014,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.543397
+  },
+  {
+    "index": 2,
+    "time_ms": 10.0,
+    "final_tick": 349632143000,
+    "temp_die_C": 25.019,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 0.761824,
+    "st_power_W": 0.0002,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.614492
+  },
+  {
+    "index": 3,
+    "time_ms": 15.0,
+    "final_tick": 354632143000,
+    "temp_die_C": 25.074,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 2.13473,
+    "st_power_W": 0.000489,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.705323
+  },
+  {
+    "index": 4,
+    "time_ms": 20.0,
+    "final_tick": 359632143000,
+    "temp_die_C": 25.074,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 0.523208,
+    "st_power_W": 0.000166,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.510223
+  },
+  {
+    "index": 5,
+    "time_ms": 25.0,
+    "final_tick": 364632143000,
+    "temp_die_C": 25.133,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 1.826345,
+    "st_power_W": 0.000493,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.601799
+  },
+  {
+    "index": 6,
+    "time_ms": 30.0,
+    "final_tick": 369632143000,
+    "temp_die_C": 25.133,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 0.423234,
+    "st_power_W": 0.000129,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.534435
+  },
+  {
+    "index": 7,
+    "time_ms": 34.077695915,
+    "final_tick": 373709838915,
+    "temp_die_C": 25.133,
+    "temp_pkg_C": 25.0,
+    "temp_hs_C": 25.0,
+    "dyn_power_W": 0.934691,
+    "st_power_W": 0.000273,
+    "freq_GHz": 3.3003300330033003,
+    "ipc": 0.556112
+  }
+]

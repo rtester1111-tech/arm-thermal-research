@@ -1,0 +1,137 @@
+﻿#!/bin/sh
+# ============================================================
+# fs_phase7_task_trace.rcS — Phase 7: Task Placement Trace
+# ============================================================
+# Workstream B deliverable. Replaces Python inline workloads with
+# a pre-compiled C binary (stress_lcg) so that Timing-mode simulation
+# does not hang loading the Python interpreter.
+#
+# Phase A: Pinned to cpu0 (big cluster) via taskset.
+# Phase B: Free placement — scheduler chooses CPU.
+#
+# Evidence collected:
+#   [STRESS] START/DONE lines — CPU at workload entry/exit
+#   [SAMPLER] lines — external /proc/<pid>/stat field-39 poll
+#   [FREQ] lines — sysfs frequency snapshot
+#
+# Prerequisites:
+#   /root/stress_lcg must exist and be executable in the guest rootfs.
+#   Cross-compile with: make -C workloads/stress_lcg STATIC=1
+#   Install: copy stress_lcg.aarch64 into disk image as /root/stress_lcg
+#
+# CPU topology (gem5 --big-cpus=1 --little-cpus=1):
+#   CPU 0 = big cluster (Cortex-X4 class, 3.3 GHz)
+#   CPU 1 = little cluster (Cortex-A720 class, 2.0 GHz)
+# ============================================================
+
+STRESS=/root/stress_lcg
+ITERS=500000
+SAMPLES=30
+
+sysfs_read() { cat "$1" 2>/dev/null || echo "N/A"; }
+
+# Cluster ID helper: CPU 0 = big (cluster 0), CPU 1 = little (cluster 1)
+cluster_of() {
+    case "$1" in
+        0) echo "big"    ;;
+        1) echo "little" ;;
+        *) echo "unknown";;
+    esac
+}
+
+echo "======================================================="
+echo "Phase 7: Task Placement Trace (C workload)"
+echo "======================================================="
+echo "[INFO] Kernel: $(uname -r)"
+echo "[INFO] CPUs online:   $(sysfs_read /sys/devices/system/cpu/online)"
+echo "[INFO] CPUs possible: $(sysfs_read /sys/devices/system/cpu/possible)"
+
+if [ ! -x "$STRESS" ]; then
+    echo "[ERROR] $STRESS not found or not executable."
+    echo "        Cross-compile with: make -C workloads/stress_lcg STATIC=1"
+    echo "        Then install into disk image as /root/stress_lcg"
+    /sbin/m5 exit
+fi
+
+# ─────────────────────────────────────────────────────────────
+# Phase A: Pinned to cpu0 (big cluster)
+# ─────────────────────────────────────────────────────────────
+echo ""
+echo "======================================================="
+echo "[PHASE A] Pinned big-core stress  (taskset 0x1 = cpu0)"
+echo "======================================================="
+
+freq_before=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+echo "[A] cpu0 freq before: ${freq_before} kHz"
+
+taskset 0x1 "$STRESS" "$ITERS" &
+PID_A=$!
+
+echo "[A] workload PID: $PID_A"
+
+# Poll /proc/<pid>/stat field 39 (processor) while workload runs
+i=0
+while i=$((i+1)) && [ "$i" -le "$SAMPLES" ] && [ -d "/proc/$PID_A" ]; do
+    stat=$(cat /proc/$PID_A/stat 2>/dev/null)
+    if [ -n "$stat" ]; then
+        cpu_id=$(echo "$stat" | awk '{print $39}')
+        ts=$(awk '{print $1}' /proc/uptime)
+        cluster=$(cluster_of "$cpu_id")
+        echo "[SAMPLER] TS:$ts Phase:A PID:$PID_A CPU:$cpu_id Cluster:$cluster Pinned:yes"
+    fi
+done
+
+wait $PID_A
+EXIT_A=$?
+
+freq_after_a=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+echo "[A] Exit status: $EXIT_A"
+echo "[A] cpu0 freq after: ${freq_after_a} kHz"
+echo "[FREQ] Phase:A cpu0:${freq_after_a} cpu1:$(sysfs_read /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq)"
+
+# ─────────────────────────────────────────────────────────────
+# Phase B: Free placement — scheduler decides
+# ─────────────────────────────────────────────────────────────
+echo ""
+echo "======================================================="
+echo "[PHASE B] Free EAS placement  (no CPU affinity)"
+echo "======================================================="
+
+"$STRESS" "$ITERS" &
+PID_B=$!
+
+echo "[B] workload PID: $PID_B"
+
+i=0
+while i=$((i+1)) && [ "$i" -le "$SAMPLES" ] && [ -d "/proc/$PID_B" ]; do
+    stat=$(cat /proc/$PID_B/stat 2>/dev/null)
+    if [ -n "$stat" ]; then
+        cpu_id=$(echo "$stat" | awk '{print $39}')
+        ts=$(awk '{print $1}' /proc/uptime)
+        cluster=$(cluster_of "$cpu_id")
+        echo "[SAMPLER] TS:$ts Phase:B PID:$PID_B CPU:$cpu_id Cluster:$cluster Pinned:no"
+    fi
+done
+
+wait $PID_B
+EXIT_B=$?
+
+freq_after_b0=$(sysfs_read /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)
+freq_after_b1=$(sysfs_read /sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq)
+echo "[B] Exit status: $EXIT_B"
+echo "[FREQ] Phase:B cpu0:${freq_after_b0} cpu1:${freq_after_b1}"
+
+# ─────────────────────────────────────────────────────────────
+# Summary
+# ─────────────────────────────────────────────────────────────
+echo ""
+echo "======================================================="
+echo "SUMMARY: Phase 7 Task Placement Trace"
+echo "======================================================="
+echo "  Phase A (pinned cpu0): freq ${freq_before} -> ${freq_after_a} kHz"
+echo "  Phase B (free):        cpu0=${freq_after_b0} kHz  cpu1=${freq_after_b1} kHz"
+echo ""
+echo "  Check [SAMPLER] and [STRESS] lines above for CPU placement evidence."
+echo "======================================================="
+
+/sbin/m5 exit

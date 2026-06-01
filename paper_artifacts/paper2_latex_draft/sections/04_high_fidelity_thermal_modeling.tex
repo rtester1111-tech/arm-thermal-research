@@ -1,0 +1,40 @@
+\section{High-Fidelity 3-Node Thermal Modeling}
+\label{sec:modeling}
+
+To provide the EAS scheduler with accurate transient thermal profiles, we developed the V3 3-Node Cauer model. This model segregates the heat dissipation path into three distinct physical domains: the silicon die, the BGA package, and the macroscopic heatsink (or device chassis).
+
+\subsection{Mathematical Formulation}
+
+The thermal state space is governed by three coupled first-order ordinary differential equations (ODEs), formulated via Kirchhoff's Current Law (KCL) applied to the thermal-electrical duality:
+
+\begin{align}
+    C_{die} \frac{dT_{die}}{dt} &= P_{in} - \frac{T_{die} - T_{pkg}}{R_{die}} \label{eq:die} \\
+    C_{pkg} \frac{dT_{pkg}}{dt} &= \frac{T_{die} - T_{pkg}}{R_{die}} - \frac{T_{pkg} - T_{hs}}{R_{pkg}} \label{eq:pkg} \\
+    C_{hs} \frac{dT_{hs}}{dt} &= \frac{T_{pkg} - T_{hs}}{R_{pkg}} - \frac{T_{hs} - T_{amb}}{R_{hs}} \label{eq:hs}
+\end{align}
+
+Here, $P_{in}$ is the dynamic power injected by the CPU. $T_{die}$, $T_{pkg}$, and $T_{hs}$ represent the transient temperatures of the die, package, and heatsink, respectively. $T_{amb}$ is the constant ambient boundary condition.
+
+\subsection{Numerical Integration and Stability}
+
+To embed this model into the OS thermal governor, the continuous ODEs are discretized using the explicit Forward Euler method. For a discrete sub-step $h$:
+
+\begin{align}
+    T_{die}^{n+1} &= T_{die}^n + \frac{h}{C_{die}}\left[P_{in} - \frac{T_{die}^n - T_{pkg}^n}{R_{die}}\right] \\
+    T_{pkg}^{n+1} &= T_{pkg}^n + \frac{h}{C_{pkg}}\left[\frac{T_{die}^n - T_{pkg}^n}{R_{die}} - \frac{T_{pkg}^n - T_{hs}^n}{R_{pkg}}\right] \\
+    T_{hs}^{n+1} &= T_{hs}^n + \frac{h}{C_{hs}}\left[\frac{T_{pkg}^n - T_{hs}^n}{R_{pkg}} - \frac{T_{hs}^n - T_{amb}}{R_{hs}}\right]
+\end{align}
+
+To guarantee numerical stability, the integration step size $h$ must satisfy the Courant-Friedrichs-Lewy (CFL) condition: $h < 2 \cdot \min(R_i C_i)$. In our implementation, we employ a sub-stepping technique where the policy simulator's macro-tick (\SI{5}{\second}) is subdivided into 50 micro-ticks ($h = \SI{0.1}{\second}$), which is strictly below the stability threshold of our smallest time constant.
+
+\subsection{Thermal Time Constants ($\tau$) and Parameter Calibration}
+
+The V3 model parameters maintain steady-state compatibility with legacy 2-node models ($R_{total} = \SI{15.0}{\kelvin\per\watt}$), so both models reach the same equilibrium temperature; the differences are entirely in transient response. We use the RC configuration validated from the gem5 smoke-run \texttt{config.ini} (Workstream~A, 2026-05-29):
+
+\begin{itemize}
+    \item \textbf{$\tau_1$ (Die Flash):} $R_{die}C_{die} = 5.0 \times 1.0 = \SI{5}{\second}$. Captures the rapid temperature rise of the silicon junction.
+    \item \textbf{$\tau_2$ (Package Soak):} $R_{pkg}C_{pkg} = 2.0 \times 5.0 = \SI{10}{\second}$. Represents heat spreading through the BGA substrate.
+    \item \textbf{$\tau_3$ (Heatsink Inertia):} $R_{hs}C_{hs} = 8.0 \times 15.0 = \SI{120}{\second}$. Models the thermal mass of the aluminum/copper heatsink (consistent with typical passively cooled mobile SoCs).
+\end{itemize}
+
+With $\tau_3/\tau_1 = 24$, the heatsink absorbs transient heat for over two minutes before reaching saturation. This 24$\times$ separation of time scales is the physical basis for the Phase~6 policy: DVFS should not trigger while the heatsink retains substantial thermal headroom. The gem5 simulation confirmed all four node temperatures ($T_{die}$, $T_{pkg}$, $T_{hs}$, $T_{amb}$) using the ThermalNodeStats instrumentation patch described in Section~\ref{sec:intro}.

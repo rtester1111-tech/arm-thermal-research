@@ -1,0 +1,151 @@
+From: ARM Thermal Research Project
+Date: 2026-05-28
+Subject: [PATCH] sim/power: export ThermalNode temperature as periodic stat
+
+ThermalNode objects (die, package, heatsink intermediate nodes) hold
+temperature as internal state (ThermalNode::temp) that is updated by
+ThermalModel::doStep() after each RC solver step.  This state was never
+registered in gem5's stats framework, making it invisible in stats.txt.
+
+Only ThermalDomain::currentTemp was exported, giving the die-side
+temperature attached to a cluster.  Package and heatsink node
+temperatures were therefore unobservable without a C++ debugger.
+
+This patch adds a minimal ThermalNodeStats group to ThermalNode and
+updates ThermalModel::doStep() to push the post-solve temperature into
+the stat after every thermal step.  No behaviour change; 2-node and
+3-node topologies both work unchanged.
+
+After applying, stats.txt will contain entries such as:
+
+    system.thermal_model.node_die.temperature    25.34   # Celsius
+    system.thermal_model.node_pkg.temperature    25.12
+    system.thermal_model.node_hs.temperature     25.01   # 3-node only
+    system.thermal_model.node_amb.temperature    25.00   # reference node
+
+These stat names correspond to the Python-side SimObject attribute names
+set in gem5_fs_thermal.py (tm.node_die, tm.node_pkg, tm.node_hs).
+
+Probe evidence: see paper_artifacts/paper2_experiment_evidence_2026-05-29/workstream_A_3node_patch_validation/MANIFEST.md
+Upstream fix ref: gem5 PR #3195 (thermal_model.cc startup init)
+---
+ src/sim/power/thermal_node.hh  | 22 ++++++++++++++
+ src/sim/power/thermal_node.cc  | 20 +++++++++++++
+ src/sim/power/thermal_model.cc | 11 +++++++
+ 3 files changed, 53 insertions(+)
+
+NOTE: Line numbers in the hunks below are approximate (gem5 25.1.0.1).
+Apply with: git apply patches/thermal_node_temperature_stat.patch
+Verify with: grep -n "temperature" src/sim/power/thermal_node.hh
+
+diff --git a/src/sim/power/thermal_node.hh b/src/sim/power/thermal_node.hh
+index 4a3b1f2..8c7e09d 100644
+--- a/src/sim/power/thermal_node.hh
++++ b/src/sim/power/thermal_node.hh
+@@ -38,16 +38,38 @@
+ #ifndef __SIM_POWER_THERMAL_NODE_HH__
+ #define __SIM_POWER_THERMAL_NODE_HH__
+
+ #include "base/temperature.hh"
++#include "base/statistics.hh"
+ #include "params/ThermalNode.hh"
+ #include "sim/sim_object.hh"
+
+ class ThermalNode : public SimObject
+ {
+   public:
+     typedef ThermalNodeParams Params;
+     ThermalNode(const Params &p);
+
+-    /* Temperature of this node; updated by ThermalModel::doStep(). */
++    /**
++     * Temperature of this node (Kelvin); updated by ThermalModel::doStep()
++     * after each RC solver step.  Read via toCelsius() for display.
++     */
+     Temperature temp;
++
++    /**
++     * gem5 stats group.  Exposes 'temperature' (Celsius) to stats.txt so
++     * that intermediate node temperatures (pkg, heatsink) are observable
++     * without a debugger.  ThermalModel::doStep() calls the update after
++     * each solver iteration.
++     */
++    struct ThermalNodeStats : public statistics::Group
++    {
++        ThermalNodeStats(ThermalNode *parent);
++
++        /** Current node temperature in degrees Celsius. */
++        statistics::Value<double> temperature;
++    } stats;
++
++    /** Called by ThermalModel::doStep() after each solver step. */
++    void updateStats() { stats.temperature = temp.toCelsius(); }
++
+     int id;
+ };
+
+ #endif // __SIM_POWER_THERMAL_NODE_HH__
+
+diff --git a/src/sim/power/thermal_node.cc b/src/sim/power/thermal_node.cc
+index 2c8e1a3..d9f4b81 100644
+--- a/src/sim/power/thermal_node.cc
++++ b/src/sim/power/thermal_node.cc
+@@ -37,11 +37,31 @@
+
+ #include "sim/power/thermal_node.hh"
+
++#include "base/stats/group.hh"
++
+ ThermalNode::ThermalNode(const ThermalNodeParams &params)
+-    : SimObject(params), temp(0), id(-1)
++    : SimObject(params), temp(0), id(-1), stats(this)
+ {}
++
++/**
++ * ThermalNodeStats constructor.
++ *
++ * The statistics::Group base is constructed with 'parent' (the owning
++ * ThermalNode SimObject) and no explicit group name, so the stat appears
++ * directly under the SimObject path:
++ *
++ *   system.thermal_model.node_pkg.temperature   25.12
++ *
++ * rather than under an extra sub-namespace.
++ *
++ * units::Celsius is used to match ThermalDomain::currentTemp convention.
++ */
++ThermalNode::ThermalNodeStats::ThermalNodeStats(ThermalNode *parent)
++    : statistics::Group(parent),
++      ADD_STAT(temperature,
++               statistics::units::Celsius::get(),
++               "Current temperature of this thermal node")
++{
++    temperature.precision(3);
++}
+
+diff --git a/src/sim/power/thermal_model.cc b/src/sim/power/thermal_model.cc
+index 6574d9e..2f1a83c 100644
+--- a/src/sim/power/thermal_model.cc
++++ b/src/sim/power/thermal_model.cc
+@@ -155,6 +155,17 @@ ThermalModel::doStep()
+      *   n->temp  is updated with the solved temperature (Kelvin).
+      */
+
++    /*
++     * Push post-solve temperatures into each node's stats object.
++     *
++     * This must run AFTER the linear solver has updated n->temp for all
++     * eq_nodes and BEFORE the next periodic dump, so that stats.txt
++     * captures the correct value for this step interval.
++     *
++     * Note: ThermalDomain nodes call setTemperature() separately (below),
++     * which already updates ThermalDomain::stats.currentTemp.  Calling
++     * updateStats() on all eq_nodes includes domain nodes too, which is
++     * harmless — they just export the same value via a different stat path.
++     */
++    for (auto *n : eq_nodes)
++        n->updateStats();
++
+     /* Reschedule next thermal step. */
+     schedule(stepEvent, curTick() + sim_clock::as_int::s * _step);
+ }

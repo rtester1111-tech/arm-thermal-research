@@ -1,0 +1,55 @@
+#!/bin/bash
+# ============================================================
+# run_workload_light.rcS — Lightweight CPU stress workload
+# ============================================================
+# Pure shell-based CPU-intensive workload that doesn't require
+# transferring any binary. Uses tight arithmetic loops to
+# stress the CPU and generate power/heat.
+# ============================================================
+
+echo "=========================================="
+echo "Starting Lightweight CPU Stress Workload"
+echo "=========================================="
+
+echo "[INFO] Running on CPU 0 (Big Core)..."
+
+# Phase 1: Integer arithmetic stress (tight loop)
+echo "[PHASE 1] Integer arithmetic stress loop..."
+i=0
+while [ $i -lt 500000 ]; do
+    i=$((i + 1))
+done
+echo "[PHASE 1] Done. iterations=$i"
+
+# Phase 2: Heavier computation with nested loops
+echo "[PHASE 2] Nested computation loop..."
+j=0
+total=0
+while [ $j -lt 1000 ]; do
+    k=0
+    while [ $k -lt 500 ]; do
+        total=$((total + j * k))
+        k=$((k + 1))
+    done
+    j=$((j + 1))
+done
+echo "[PHASE 2] Done. total=$total"
+
+# Phase 3: String/memory operations
+echo "[PHASE 3] Memory-intensive string operations..."
+m=0
+str="thermal_stress_test"
+while [ $m -lt 100000 ]; do
+    str="${str}x"
+    m=$((m + 1))
+    # Periodically reset to avoid running out of memory
+    if [ $((m % 10000)) -eq 0 ]; then
+        str="thermal_stress_test"
+        echo "[PHASE 3] Progress: $m / 100000"
+    fi
+done
+echo "[PHASE 3] Done."
+
+echo "=========================================="
+echo "Workload completed successfully."
+echo "=========================================="

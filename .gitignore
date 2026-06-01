@@ -1,0 +1,70 @@
+# Compiled binary executables
+src/*.aarch64
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+scripts/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# gem5 output directories and simulation logs
+m5out*/
+logs/
+*.log
+*.pid
+
+# Local build artifacts
+*.aarch64
+*.o
+*.so
+
+# Temporary files
+*.tmp
+*.swp
+.vscode/
+.claude/
+
+# Local/private AI workspace. Curated public artifacts live in paper_artifacts/.
+ai_workspace/
+
+# Submission portal/export packages
+paper_artifacts/submission_package_*.zip
+paper_artifacts/submission_package_*.7z
+paper_artifacts/submission_package_*/
+paper_artifacts/submission_package_*/todolist.md
+
+# Internal submission working notes that should not enter paper_artifacts/.
+paper_artifacts/paper2_latex_draft/COVER_LETTER_DRAFT.md
+paper_artifacts/paper2_latex_draft/README_SUBMISSION_CHECKLIST.md
+
+# LaTeX build artifacts
+*.aux
+*.out
+*.blg
+*.synctex.gz
+
+# Internal interview draft files
+docs/interview_story*
+
+# Generated gem5 config snapshots can contain local filesystem paths.
+paper_artifacts/paper2_experiment_evidence_2026-05-29/workstream_A_3node_patch_validation/config.ini
+paper_artifacts/paper2_platform_probes_*/**/system.terminal
+paper_artifacts/paper2_platform_probes_*/**/config.ini
+paper_artifacts/paper2_platform_probes_*/**/system.dtb
+paper_artifacts/paper2_platform_probes_*/**/*.device
+
+# Large simulation output files (>50MB, not suitable for GitHub)
+results/phase5_v2/thinned_stats.txt
+results/phase5_v2/fs_simulation_results_final.json
+paper_artifacts/paper2_experiment_evidence_2026-05-29/gem5_run_outputs/fs_simulation_results_final.json
+
+# LaTeX build artifacts
+paper_artifacts/raw_evidence/fs_simulation_results_final.json

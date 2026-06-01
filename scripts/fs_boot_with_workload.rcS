@@ -1,0 +1,66 @@
+#!/bin/bash
+# ============================================================
+# fs_boot_with_workload.rcS — Combined boot + workload script
+# ============================================================
+# This script handles BOTH the initial boot (Atomic) and the
+# workload execution (Timing) in a single file.
+#
+# Flow:
+#   1. Print system info
+#   2. Save checkpoint via m5
+#   3. After checkpoint (or after restore), run workload
+#   4. Exit simulation
+# ============================================================
+
+echo "=========================================="
+echo "gem5 FS Boot Script - System Information"
+echo "=========================================="
+
+echo "[INFO] Kernel: $(uname -r)"
+echo "[INFO] Architecture: $(uname -m)"
+
+echo "[CPU] Online CPUs:"
+cat /sys/devices/system/cpu/online 2>/dev/null || echo "  (unavailable)"
+
+echo ""
+echo "=========================================="
+echo "Saving checkpoint..."
+echo "=========================================="
+
+/sbin/m5 checkpoint
+
+# ============================================================
+# EVERYTHING BELOW RUNS AFTER CHECKPOINT RESTORE (Timing mode)
+# ============================================================
+
+echo "=========================================="
+echo "Post-checkpoint: Starting CPU Workload"
+echo "=========================================="
+
+# Phase 1: Integer arithmetic stress (tight loop on Big Core)
+echo "[PHASE 1] Integer arithmetic stress..."
+i=0
+while [ $i -lt 200 ]; do
+    i=$((i + 1))
+done
+echo "[PHASE 1] Done. iterations=$i"
+
+# Phase 2: Nested computation
+echo "[PHASE 2] Nested multiply-accumulate..."
+j=0
+total=0
+while [ $j -lt 10 ]; do
+    k=0
+    while [ $k -lt 10 ]; do
+        total=$((total + j * k))
+        k=$((k + 1))
+    done
+    j=$((j + 1))
+done
+echo "[PHASE 2] Done. total=$total"
+
+echo "=========================================="
+echo "Workload completed. Exiting simulation."
+echo "=========================================="
+
+/sbin/m5 exit

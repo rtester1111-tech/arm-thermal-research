@@ -1,0 +1,29 @@
+* gem5_absolute_zero_fixed.cir
+* Shows correct behavior after applying gem5_thermal_fix.patch
+* Node voltages = temperatures in Kelvin
+
+.TITLE gem5 Patched — Correct Thermal Init
+
+* Ambient bias (298.15 K = 25°C)
+Vamb amb 0 DC 298.15
+
+* CPU power source: 3W injected at die node
+I1 amb die DC 3.0
+
+* Cauer RC network
+R1  die  pkg  5
+R2  pkg  amb  10
+C1  die  amb  1
+C2  pkg  amb  5
+
+* FIXED: pkg also starts at ambient temperature
+.IC V(die)=298.15 V(pkg)=298.15 V(amb)=298.15
+
+* Transient simulation: 0.1ms steps, 250ms total
+.TRAN 0.1m 250m UIC
+
+* Output
+.MEASURE TRAN Vdie_final FIND V(die) AT=250m
+.MEASURE TRAN Vdie_min   MIN V(die)
+
+.END

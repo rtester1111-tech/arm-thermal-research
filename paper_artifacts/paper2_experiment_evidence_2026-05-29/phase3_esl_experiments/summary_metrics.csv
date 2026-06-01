@@ -1,0 +1,4 @@
+variant,T_die_max_C,T_pkg_max_C,T_hs_max_C,proj_perf_mean_GIPS,energy_J,edp_J_per_GIPS,throttle_events
+2node_aggressive,75.944,57.867,25.0,2.9553,1995.0,675.067,0
+3node_balanced,75.075,57.63,50.852,3.0316,2164.0,713.822,0
+3node_policy,75.075,53.083,46.587,2.681,2052.1,765.413,0

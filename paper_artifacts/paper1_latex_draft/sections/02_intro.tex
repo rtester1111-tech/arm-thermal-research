@@ -1,0 +1,15 @@
+\section{Introduction}
+\label{sec:intro}
+
+The relentless scaling of transistor densities and the paradigm shift toward heterogeneous Multi-Processor Systems-on-Chip (MPSoC) and 3D integration have elevated thermal dissipation from a packaging afterthought to a primary architectural constraint. Consequently, Dynamic Thermal Management (DTM) and temperature-aware task scheduling are now integral to modern architectural design. Accurate evaluation of these mechanisms necessitates high-fidelity thermal simulations that capture both the steady-state thermal envelopes and the fine-grained transient responses of the silicon die.
+
+Despite the widespread adoption of comprehensive architectural simulators like gem5 \cite{gem5}, the community exhibits a pronounced reluctance to rely on their native thermal modeling capabilities. A survey of the 2024--2026 computer architecture literature reveals a pervasive, institutionalized toolchain: architectural simulators are relegated to generating performance events and power traces (often via McPAT), while actual thermal analysis is offloaded to external solvers. For instance, recent studies evaluating FinFET temperature-aware schedulers \cite{treafet2024} and microfluidic-cooled 3DICs \cite{cool3d2025} exclusively utilize HotSpot \cite{hotspot} as their thermal backend. Similarly, research targeting 3D MPSoC DTM frameworks \cite{mpsoc2024} relies on 3D-ICE, while advanced learning-based scheduling methodologies \cite{podtas2025, fasttherm2024} cross-validate against finite-element method (FEM) solvers. This bifurcation stems from a fundamental concern: the lack of a rigorous ``physical admissibility proof'' for native architectural thermal models.
+
+In this work, we address this methodological gap by critically examining the native thermal infrastructure of gem5. We expose a latent artifact where intermediate thermal nodes are unphysically initialized to absolute zero (\SI{0}{\kelvin}). While seemingly a benign implementation oversight, we demonstrate that this initialization anomaly induces massive artificial temperature gradients during startup, resulting in unphysical junction cooling that corrupts the monotonic warm-up phase---a phase critical for evaluating transient DTM responsiveness.
+
+To restore trust in native architectural thermal simulations, we propose a comprehensive validation methodology. The primary contributions of this paper are:
+\begin{itemize}
+    \item We document the absolute-zero initialization anomaly in gem5's thermal model and mathematically characterize its impact on transient temperature distortion.
+    \item We propose a generalized five-way validation ladder (Analytical $\leftrightarrow$ Native-Bug $\leftrightarrow$ Native-Fix $\leftrightarrow$ Python-RC $\leftrightarrow$ SPICE) to verify architectural thermal models across multiple abstraction levels.
+    \item We provide open-source SPICE netlists and closed-form proofs demonstrating that our proposed patch constraints the simulation error to within \SI{0.08}{\degreeCelsius} against industry-standard SPICE tools.
+\end{itemize}

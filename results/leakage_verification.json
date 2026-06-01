@@ -1,0 +1,135 @@
+{
+  "leakage_amplification_by_temperature": [
+    {
+      "temp": 25,
+      "p_dynamic": 3.15,
+      "p_leak": 0.7986,
+      "p_total": 3.9486,
+      "amplification_pct": -12.25,
+      "leak_ratio_pct": 20.22
+    },
+    {
+      "temp": 30,
+      "p_dynamic": 3.15,
+      "p_leak": 0.9513,
+      "p_total": 4.1013,
+      "amplification_pct": -8.86,
+      "leak_ratio_pct": 23.2
+    },
+    {
+      "temp": 40,
+      "p_dynamic": 3.15,
+      "p_leak": 1.35,
+      "p_total": 4.5,
+      "amplification_pct": 0.0,
+      "leak_ratio_pct": 30.0
+    },
+    {
+      "temp": 50,
+      "p_dynamic": 3.15,
+      "p_leak": 1.9157,
+      "p_total": 5.0657,
+      "amplification_pct": 12.57,
+      "leak_ratio_pct": 37.82
+    },
+    {
+      "temp": 60,
+      "p_dynamic": 3.15,
+      "p_leak": 2.7186,
+      "p_total": 5.8686,
+      "amplification_pct": 30.41,
+      "leak_ratio_pct": 46.32
+    },
+    {
+      "temp": 70,
+      "p_dynamic": 3.15,
+      "p_leak": 3.8578,
+      "p_total": 7.0078,
+      "amplification_pct": 55.73,
+      "leak_ratio_pct": 55.05
+    },
+    {
+      "temp": 75,
+      "p_dynamic": 3.15,
+      "p_leak": 4.5956,
+      "p_total": 7.7456,
+      "amplification_pct": 72.12,
+      "leak_ratio_pct": 59.33
+    },
+    {
+      "temp": 80,
+      "p_dynamic": 3.15,
+      "p_leak": 5.4745,
+      "p_total": 8.6245,
+      "amplification_pct": 91.66,
+      "leak_ratio_pct": 63.48
+    },
+    {
+      "temp": 85,
+      "p_dynamic": 3.15,
+      "p_leak": 6.5215,
+      "p_total": 9.6715,
+      "amplification_pct": 114.92,
+      "leak_ratio_pct": 67.43
+    },
+    {
+      "temp": 90,
+      "p_dynamic": 3.15,
+      "p_leak": 7.7687,
+      "p_total": 10.9187,
+      "amplification_pct": 142.64,
+      "leak_ratio_pct": 71.15
+    },
+    {
+      "temp": 95,
+      "p_dynamic": 3.15,
+      "p_leak": 9.2545,
+      "p_total": 12.4045,
+      "amplification_pct": 175.65,
+      "leak_ratio_pct": 74.61
+    },
+    {
+      "temp": 100,
+      "p_dynamic": 3.15,
+      "p_leak": 11.0243,
+      "p_total": 14.1743,
+      "amplification_pct": 214.99,
+      "leak_ratio_pct": 77.78
+    }
+  ],
+  "simulation_comparison": [
+    {
+      "mode": "sve2_aggressive",
+      "leak_max_temp": 90.79,
+      "noleak_max_temp": 85.19,
+      "temp_diff": 5.6,
+      "leak_energy": 1179.9,
+      "noleak_energy": 1162.5,
+      "energy_amplification_pct": 1.5
+    },
+    {
+      "mode": "sve2_balanced",
+      "leak_max_temp": 88.1,
+      "noleak_max_temp": 75.86,
+      "temp_diff": 12.24,
+      "leak_energy": 1114.4,
+      "noleak_energy": 1053.5,
+      "energy_amplification_pct": 5.8
+    },
+    {
+      "mode": "sve2_predictive",
+      "leak_max_temp": 88.03,
+      "noleak_max_temp": 66.78,
+      "temp_diff": 21.25,
+      "leak_energy": 885.7,
+      "noleak_energy": 848.5,
+      "energy_amplification_pct": 4.4
+    }
+  ],
+  "model_parameters": {
+    "LEAK_RATIO_REF": 0.3,
+    "T_LEAK_REF": 40.0,
+    "LEAK_COEFF": 0.035
+  },
+  "conclusion": "報告宣稱的 42% 增幅在約 65°C 時成立，但在峰值溫度 90°C 下實際增幅遠大於此。建議修正報告，明確標註參考溫度或使用時間平均增幅。"
+}

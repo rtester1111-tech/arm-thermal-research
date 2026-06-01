@@ -1,0 +1,21 @@
+{
+  "phase5_bugged": {
+    "run": "m5out_fs_thermal",
+    "sim_duration_ms": 222.6,
+    "records": 1114,
+    "temp_min_C": 12.3436,
+    "temp_max_C": 25.0,
+    "temp_final_C": 12.3436,
+    "bug_confirmed": true
+  },
+  "phase5_5_fixed": {
+    "run": "m5out_fs_thermal_v2",
+    "sim_duration_ms": 5410.0,
+    "records_sampled": 542,
+    "temp_min_C": 25.0036,
+    "temp_max_C": 26.2356,
+    "temp_final_C": 26.2356,
+    "fix_validated": true,
+    "note": "Simulation in progress \u2014 partial data snapshot"
+  }
+}

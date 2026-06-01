@@ -1,0 +1,47 @@
+{
+  "phase_A": {
+    "total_samples": 1,
+    "cpu_counts": {
+      "0": 1
+    },
+    "cpu0_pct": 100.0,
+    "cpu1_pct": 0.0
+  },
+  "phase_B": {
+    "total_samples": 1,
+    "cpu_counts": {
+      "1": 1
+    },
+    "cpu0_pct": 0.0,
+    "cpu1_pct": 100.0
+  },
+  "stress_events": [
+    {
+      "event": "START",
+      "pid": 165,
+      "cpu": 0
+    },
+    {
+      "event": "START",
+      "pid": 176,
+      "cpu": 1
+    }
+  ],
+  "freq_snapshots": [
+    {
+      "phase": "A",
+      "cpu0_khz": "N/A",
+      "cpu1_khz": "N/A"
+    },
+    {
+      "phase": "B",
+      "cpu0_khz": "N/A",
+      "cpu1_khz": "N/A"
+    }
+  ],
+  "verdict": {
+    "phase_A_pinning_works": true,
+    "phase_B_migration_observed": true,
+    "interpretation": "Pinning confirmed (Phase A: 100% cpu0). Partial migration observed (Phase B: 100% cpu1). Heterogeneous CPU placement is observable in gem5."
+  }
+}

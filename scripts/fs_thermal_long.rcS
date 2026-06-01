@@ -1,0 +1,69 @@
+#!/bin/bash
+# ============================================================
+# fs_thermal_long.rcS — Extended workload for thermal dynamics
+# ============================================================
+# Runs a sustained compute workload long enough for the Cauer
+# RC thermal model to show meaningful temperature rise after
+# the Absolute-Zero Bug fix. Targets ~3-5 simulated seconds
+# of continuous CPU activity.
+# ============================================================
+
+echo "=========================================="
+echo "gem5 FS Extended Thermal Workload"
+echo "=========================================="
+echo "[INFO] Kernel: $(uname -r)"
+echo "[INFO] CPUs online: $(cat /sys/devices/system/cpu/online)"
+echo ""
+
+echo "Saving checkpoint..."
+/sbin/m5 checkpoint
+
+# ============================================================
+# EVERYTHING BELOW RUNS AFTER CHECKPOINT RESTORE (Timing mode)
+# ============================================================
+
+echo "=========================================="
+echo "Post-checkpoint: Sustained Compute Workload"
+echo "=========================================="
+
+# Phase 1: Python3 integer LCG loop — high IPC, sustained power
+# Each iteration: multiply + add + mask = ~3-5 µop, generates ~0.7-1.0 IPC
+# 4M iterations ≈ 3-5 simulated seconds at 3.3 GHz
+echo "[PHASE 1] Python3 LCG stress loop (target ~3-5 sim-seconds)..."
+python3 - <<'PYEOF'
+import sys
+x = 1
+ITERS = 4000000
+for i in range(ITERS):
+    x = (x * 6364136223846793005 + 1442695040888963407) & 0xFFFFFFFFFFFFFFFF
+print(f"[PHASE 1] Done. iters={ITERS}  result=0x{x:016x}")
+PYEOF
+
+# Phase 2: Integer multiply-accumulate (different instruction mix)
+echo "[PHASE 2] Python3 multiply-accumulate..."
+python3 - <<'PYEOF'
+acc = 0
+for i in range(2000000):
+    acc += i * (i + 1) * 31
+    acc &= 0xFFFFFFFF
+print(f"[PHASE 2] Done. acc=0x{acc:08x}")
+PYEOF
+
+# Phase 3: Nested loop with data dependency (prevents over-speculation)
+echo "[PHASE 3] Python3 data-dependent nested loop..."
+python3 - <<'PYEOF'
+x = 0x12345678ABCDEF01
+for i in range(1000000):
+    x ^= x >> 17
+    x ^= x << 31
+    x ^= x >> 8
+    x &= 0xFFFFFFFFFFFFFFFF
+print(f"[PHASE 3] Done. x=0x{x:016x}")
+PYEOF
+
+echo ""
+echo "=========================================="
+echo "All phases complete. Exiting simulation."
+echo "=========================================="
+
+/sbin/m5 exit

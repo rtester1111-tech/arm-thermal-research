@@ -1,0 +1,17 @@
+\section{Introduction}
+\label{sec:intro}
+
+The evolution of mobile and embedded computing has been driven by the relentless pursuit of higher performance within heavily constrained thermal envelopes. Heterogeneous multicore architectures, most notably the ARM big.LITTLE and DynamIQ paradigms, address this by combining high-performance out-of-order cores (big) with energy-efficient in-order cores (LITTLE). To maximize the utility of these architectures, Operating Systems employ Energy Aware Scheduling (EAS) \cite{eas2015} to optimally place tasks based on energy and performance requirements.
+
+As transistor densities increase, thermal dissipation has become the primary bottleneck. Traditional Dynamic Thermal Management (DTM) responds to thermal emergencies using Dynamic Voltage and Frequency Scaling (DVFS). While effective, aggressive DVFS abruptly halts task execution, degrading user experience. A critical flaw in contemporary DTM and EAS frameworks is their reliance on oversimplified thermal approximations. Standard 2-node RC circuits (modeling only the silicon die and package) ignore the physical realities of modern cooling solutions, particularly the massive thermal inertia of the physical heatsink or device chassis. Consequently, these models predict rapid temperature saturation, deceiving the OS into triggering premature DVFS throttling even when the heatsink retains substantial capacity.
+
+Recent literature highlights the need for more accurate thermal predictions to guide scheduling decisions \cite{podtas2025, dtm_retrospective}, yet the gap between high-fidelity physical modeling and OS-level control logic remains wide.
+
+To bridge this gap, this paper makes two contributions. First, we instrument the gem5 full-system simulator with a patch that directly exports all three Cauer RC node temperatures to simulation statistics. Second, we design a \textbf{V3 3-Node Cauer Thermal Model} and evaluate a \textbf{Phase~6 package-aware scheduling policy} via trace-driven co-simulation, using gem5-calibrated power and IPC constants. The instrumentation patch is an additive change orthogonal to the gem5 thermal-solver correctness fix described in a companion paper \cite{self_paper1}; the two address independent gaps in the simulation toolchain.
+
+The primary contributions of this work are:
+\begin{itemize}
+    \item A gem5 instrumentation patch that adds a \texttt{Thermal\-Node\-Stats} statistics group to the \texttt{Thermal\-Node} C++ class, enabling direct export of $T_{die}$, $T_{pkg}$, and $T_{hs}$ to gem5 \texttt{stats.txt}---functionality absent from the upstream gem5 release.
+    \item A mathematical derivation of the V3 3-Node Cauer model with gem5-validated RC parameters ($R_{hs}C_{hs} = \SI{120}{\second}$), showing how heatsink thermal inertia defers the onset of DVFS throttling.
+    \item A co-simulation evaluation of a package-aware Phase~6 scheduling policy showing 85\,s deferral of the first thermal intervention and a 92\% reduction in DVFS oscillation events compared to a 2-node baseline (all results modeled).
+\end{itemize}

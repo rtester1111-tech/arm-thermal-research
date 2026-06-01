@@ -1,0 +1,11 @@
+\section{Background and Motivation}
+\label{sec:background}
+
+\subsection{Energy Aware Scheduling (EAS)}
+EAS is a Linux kernel extension tailored for heterogeneous architectures like ARM big.LITTLE. Unlike the Completely Fair Scheduler (CFS) that balances load, EAS uses an Energy Model (EM) detailing CPU power and capacity at available DVFS states. EAS assigns background tasks to LITTLE cores and latency-sensitive workloads to big cores. However, baseline EAS is fundamentally power-aware, not thermal-aware; it does not explicitly track physical temperature accumulation.
+
+\subsection{Limitations of 2-Node Thermal Models}
+OS thermal governors often employ Cauer-topology RC circuits. A common abstraction is the 2-node model ($C_{die}$, $C_{pkg}$ and $R_{die}$, $R_{pkg}$). While computationally efficient, it fails to reflect the macroscopic thermal dynamics of modern devices. By artificially merging the package and chassis characteristics, the package node exhibits a compromised time constant. The model predicts rapid steady-state saturation, prompting premature DVFS throttling.
+
+\subsection{The Case for Task Migration}
+When a core approaches its thermal limit, DVFS lowers both power and performance. In heterogeneous architectures, \emph{Thermal-Aware Task Migration} is a superior alternative. Migrating an overheating big core's workload to a cooler LITTLE core leverages the latter's better performance-per-watt, allowing the big core to cool without system-wide throttling. The challenge lies in determining exactly \emph{when} to migrate versus \emph{when} to throttle---requiring high-fidelity thermal predictions. We evaluate this strategy via trace-driven co-simulation using gem5-calibrated thermal parameters.

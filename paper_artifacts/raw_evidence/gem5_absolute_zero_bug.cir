@@ -1,0 +1,37 @@
+* gem5_absolute_zero_bug.cir
+* Reproduces the Absolute-Zero Heat Sink Bug in SPICE
+* Node voltages = temperatures in Kelvin
+
+.TITLE gem5 Absolute-Zero Heat Sink Bug
+
+* Topology: I → [die] --R1-- [pkg] --R2-- [amb]
+*                  |                |
+*                 C1               C2
+*                  |                |
+*                [amb]            [amb]
+
+* Ambient bias (298.15 K = 25°C)
+Vamb amb 0 DC 298.15
+
+* CPU power source: 3W injected at die node
+I1 amb die DC 3.0
+
+* Cauer RC network
+R1  die  pkg  5      ; R_die_pkg = 5 K/W
+R2  pkg  amb  10     ; R_pkg_amb = 10 K/W
+C1  die  amb  1      ; C_die = 1 J/K
+C2  pkg  amb  5      ; C_pkg = 5 J/K
+
+* Initial conditions
+* BUG: pkg starts at 0K (absolute zero).
+* Note: V(amb) must be initialized to 298.15 in UIC transient analysis.
+.IC V(die)=298.15 V(pkg)=0.0 V(amb)=298.15
+
+* Transient simulation: 0.1ms steps, 250ms total
+.TRAN 0.1m 250m UIC
+
+* Output
+.MEASURE TRAN Vdie_final FIND V(die) AT=250m
+.MEASURE TRAN Vdie_min   MIN V(die)
+
+.END

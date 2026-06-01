@@ -1,0 +1,38 @@
+[
+  {
+    "variant": "2node_aggressive",
+    "T_die_max_C": 75.944,
+    "T_pkg_max_C": 57.867,
+    "T_hs_max_C": 25.0,
+    "proj_perf_mean_GIPS": 2.9553,
+    "energy_J": 1995.0,
+    "edp_J_per_GIPS": 675.067,
+    "throttle_events": 0,
+    "proactive_dvfs_events": 13,
+    "_note_throttle_events": "hard-throttle events (T_die>=85C); proactive_dvfs_events counts all rows in dvfs_events.csv for this variant"
+  },
+  {
+    "variant": "3node_balanced",
+    "T_die_max_C": 75.075,
+    "T_pkg_max_C": 57.63,
+    "T_hs_max_C": 50.852,
+    "proj_perf_mean_GIPS": 3.0316,
+    "energy_J": 2164.0,
+    "edp_J_per_GIPS": 713.822,
+    "throttle_events": 0,
+    "proactive_dvfs_events": 5,
+    "_note_throttle_events": "hard-throttle events (T_die>=85C); proactive_dvfs_events counts all rows in dvfs_events.csv for this variant"
+  },
+  {
+    "variant": "3node_policy",
+    "T_die_max_C": 75.075,
+    "T_pkg_max_C": 53.083,
+    "T_hs_max_C": 46.587,
+    "proj_perf_mean_GIPS": 2.681,
+    "energy_J": 2052.1,
+    "edp_J_per_GIPS": 765.413,
+    "throttle_events": 0,
+    "proactive_dvfs_events": 1,
+    "_note_throttle_events": "hard-throttle events (T_die>=85C); proactive_dvfs_events=1 is the single migration_defer event in dvfs_events.csv"
+  }
+]

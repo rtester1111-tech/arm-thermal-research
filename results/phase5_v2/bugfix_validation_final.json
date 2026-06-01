@@ -1,0 +1,15 @@
+{
+  "phase5_5_fixed": {
+    "run": "m5out_fs_thermal_v2",
+    "status": "complete",
+    "sim_duration_ms": 55116.2,
+    "sim_duration_s": 55.1162,
+    "records": 275582,
+    "temp_min_C": 25.0,
+    "temp_max_C": 28.7075,
+    "temp_final_C": 28.7075,
+    "peak_dyn_power_W": 0.7449,
+    "avg_dyn_power_mW": 3.6474,
+    "fix_validated": true
+  }
+}

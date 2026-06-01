@@ -1,0 +1,21 @@
+\section{Phase 6 Thermal-Aware Scheduling Policy}
+\label{sec:eas}
+
+Equipped with the high-fidelity 3-Node thermal model, we design a package-aware scheduling policy, designated Phase~6, and evaluate it via trace-driven co-simulation. The core design philosophy is to leverage the heterogeneous compute clusters (big and LITTLE) as distinct thermal actuators, prioritizing workload migration over frequency scaling to reduce thermal interventions.
+
+\subsection{Control Logic Architecture}
+
+The Phase~6 policy operates on a simulation macro-tick of \SI{5}{\second}. During each tick, the policy performs three operations:
+\begin{enumerate}
+    \item \textbf{Thermal State Estimation:} The policy integrates the 3-Node ODEs (Section~\ref{sec:modeling}) using the power dissipation $P_{in}$ derived from gem5-calibrated IPC and frequency constants. It tracks $T_{die}$, $T_{pkg}$, and $T_{hs}$ at each step.
+    \item \textbf{Package Headroom Assessment:} Rather than reacting to $T_{die}$ alone, the policy checks whether $T_{pkg}$ retains thermal headroom. If $T_{die}$ exceeds the proactive threshold (\SI{75}{\degreeCelsius}) but $T_{pkg}$ remains below \SI{65}{\degreeCelsius}, the policy infers a transient die spike with heatsink capacity available. It defers DVFS and instead triggers task migration.
+    \item \textbf{Task Migration vs. DVFS:} When package headroom is exhausted ($T_{pkg} \geq \SI{65}{\degreeCelsius}$), the policy falls back to DVFS frequency stepping.
+\end{enumerate}
+
+\subsection{Two-Tier Mitigation Strategy}
+
+\textbf{Tier 1: Proactive Task Migration.}
+When $T_{die} \geq T_{proact}$ and $T_{pkg} < T_{proact} - 10\,\text{°C}$, the policy offloads 40\% of the big-cluster workload to the LITTLE cluster (in co-simulation). This reduces big-core power injection from $P_{big}$ to $0.6 \cdot P_{big}$, allowing $T_{die}$ to stabilize without frequency reduction. In the co-simulation, this migration fires once at $t = \SI{150}{\second}$ and prevents all subsequent throttling events (total: 1 intervention vs.\ 13 for the 2-node baseline).
+
+\textbf{Tier 2: Reactive DVFS Stepping.}
+If $T_{pkg}$ has warmed sufficiently ($T_{pkg} \geq T_{proact} - 10\,\text{°C}$), the policy steps down the big-cluster OPP by one level. This is the same DVFS logic used by the 3-node balanced baseline (Variant~2 in Section~\ref{sec:evaluation}). By reserving DVFS as a fallback, the Phase~6 policy ensures frequency capping is employed only when package thermal headroom is genuinely exhausted.

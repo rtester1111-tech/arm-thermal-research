@@ -1,0 +1,32 @@
+
+No compatibility mode selected!
+
+
+Circuit: gem5 Patched — Correct Thermal Init
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using transient initial conditions
+
+No. of Data Rows : 2518
+
+  Measurements for Transient Analysis
+
+vdie_final          =  2.988816e+02
+vdie_min            =  2.981500e+02 at=  1.000000e-06
+
+
+Total analysis time (seconds) = 0.006
+
+Total elapsed time (seconds) = 0.007 
+
+Total DRAM available = 31706.434 MB.
+DRAM currently available = 19351.660 MB.
+Maximum ngspice program size =   20.047 MB.
+Current ngspice program size =   12.270 MB.
+
+Shared ngspice pages =   10.371 MB.
+Text (code) pages =    5.316 MB.
+Stack = 0 bytes.
+Library pages =    2.102 MB.
+

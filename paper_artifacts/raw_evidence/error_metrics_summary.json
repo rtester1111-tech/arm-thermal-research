@@ -1,0 +1,35 @@
+{
+  "python_BE_correct": {
+    "rmse_K": 0.000418,
+    "peak_error_K": 0.000705,
+    "steady_state_error_K": 0.000705,
+    "settling_time_deviation_s": 0.0035,
+    "final_temp_C": 25.7309,
+    "description": "Python Backward Euler, node_pkg=25\u00b0C (correct)"
+  },
+  "python_BE_bug": {
+    "rmse_K": 8.390319,
+    "peak_error_K": 14.415238,
+    "steady_state_error_K": 14.415238,
+    "settling_time_deviation_s": 0.0035,
+    "final_temp_C": 11.3164,
+    "description": "Python Backward Euler, node_pkg=0K (bug)"
+  },
+  "gem5_unpatched": {
+    "rmse_K": 8.419797,
+    "peak_error_K": 13.387989,
+    "steady_state_error_K": 13.387989,
+    "settling_time_deviation_s": 0.0239,
+    "final_temp_C": 12.3436,
+    "description": "gem5 unpatched (Absolute-Zero Bug)"
+  },
+  "gem5_patched": {
+    "description": "gem5 patched (fixed init), 55.1s simulated",
+    "rmse_K": 0.008158,
+    "peak_error_K": 0.034144,
+    "final_temp_C": 28.7075,
+    "temp_min_C": 25.0,
+    "temp_max_C": 28.7075,
+    "note": "RMSE successfully computed from full 55.1s thinned trace"
+  }
+}
