@@ -64,7 +64,7 @@ python3 scripts/thermal_governor.py --workload brightness
 - Paper 2 trace-driven study：三節點模型相較二節點 baseline，將第一次 thermal intervention 延後 85 simulated seconds。
 - Paper 2 package-aware policy：在 modeled 600 s sustained-load experiment 中，DVFS oscillation events 由 13 降為 1，modeled peak package temperature 降低 4.5 C。
 
-除非檔案明確標示為硬體量測，否則本倉庫結果應視為 modeled 或 simulated results。
+本倉庫目前沒有硬體量測結果；所有定量結果應視為 modeled 或 simulated results。
 
 ## 延伸閱讀
 

@@ -11,7 +11,7 @@ Chinese counterpart: [README.zh.md](README.zh.md)
 - [Validation](validation.md)
 - [Limitations](limitations.md)
 - [Related Work](related-work.md)
-- [Real-Device Calibration](real_device_calibration.md)
+- [Simulation Scope and Future Hardware Calibration](real_device_calibration.md)
 
 ## Recommended reading order
 
@@ -22,7 +22,7 @@ Chinese counterpart: [README.zh.md](README.zh.md)
 3. Read [Validation](validation.md) for the cross-check results and numerical proof.
 4. Read [Limitations](limitations.md) for model boundaries and caveats.
 5. Read [Related Work](related-work.md) for context against HotSpot, McPAT, and SPICE.
-6. Read [Real-Device Calibration](real_device_calibration.md) to learn how to measure hardware parameters to feed back into the simulation.
+6. Read [Simulation Scope and Future Hardware Calibration](real_device_calibration.md) for the boundary between the submitted simulation artifact and possible future hardware calibration work.
 
 ## Related artifacts
 

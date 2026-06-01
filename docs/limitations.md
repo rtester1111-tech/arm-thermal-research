@@ -19,8 +19,8 @@ the correct order of magnitude but are not calibrated to a specific physical die
   condition
 
 **What would strengthen it:**
-- Calibrate against a real device's thermal measurements (e.g., die temperature
-  sensor readings under controlled load)
+- Add future hardware thermal measurements under controlled load and use them
+  only after documenting the target platform and fitting procedure
 - Compare against HotSpot or a SPICE equivalent circuit with the same topology
 
 ---

@@ -5,6 +5,7 @@
 ## 1. 參數來源
 
 R 與 C 值是根據公開 thermal characterization data 擬合而來，量級合理，但沒有對準特定實體晶片。
+本倉庫目前沒有使用實體 ARM 裝置的溫度或功耗量測來校準熱模型。
 
 ## 2. 一維熱模型
 
@@ -29,4 +30,3 @@ Timing O3CPU 與 thermal ODE solver 已經足夠做研究，但仍有 cache、me
 ## 7. patch 狀態
 
 Absolute-Zero Heat Sink Bug patch 已本地驗證，並持續追蹤 upstream review。
-
